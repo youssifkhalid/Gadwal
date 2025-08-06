@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جدول الأسبوع المتطور</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* ساعة رقمية جميلة */
+        .digital-clock {
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 20px 40px;
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 2px solid rgba(0,255,136,0.3);
+            animation: clockGlow 2s infinite alternate;
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        .date-display {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 15px 30px;
+            color: white;
+            font-size: 1.2rem;
+            display: inline-block;
+            margin: 0 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .current-day-highlight {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 10px;
+            display: inline-block;
+            animation: bounceIn 1s ease-out;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #4834d4, #686de0);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #00d2d3, #54a0ff);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .today-schedule {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            animation: fadeInLeft 1s ease-out;
+        }
+
+        .today-schedule h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 2rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .sidebar {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            animation: fadeInRight 1s ease-out;
+            height: fit-content;
+        }
+
+        .today-tasks {
+            margin-bottom: 30px;
+        }
+
+        .today-tasks h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-section {
+            margin-bottom: 25px;
+        }
+
+        .task-section h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-item {
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .task-item.completed {
+            background: linear-gradient(45deg, #d4edda, #c3e6cb);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .stats-container {
+            margin-top: 30px;
+        }
+
+        .stats-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .stats-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .stats-tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .stats-content {
+            display: none;
+        }
+
+        .stats-content.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            animation: bounceIn 1s ease-out;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.3);
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #00d2d3, #54a0ff);
+            transition: width 1s ease-out;
+            border-radius: 5px;
+        }
+
+        .weekly-overview {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .day-overview {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .day-overview.current {
+            background: linear-gradient(45deg, #00b894, #00cec9);
+            color: white;
+        }
+
+        .day-overview.completed {
+            background: linear-gradient(45deg, #00d2d3, #54a0ff);
+            color: white;
+        }
+
+        .subject-tag {
+            display: inline-block;
+            background: linear-gradient(45deg, #fd79a8, #e84393);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 1rem;
+            animation: slideInUp 0.5s ease-out;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .gym-tag {
+            background: linear-gradient(45deg, #00b894, #00cec9);
+        }
+
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: float 6s infinite linear;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        @keyframes clockGlow {
+            from { box-shadow: 0 0 20px rgba(0,255,136,0.5); }
+            to { box-shadow: 0 0 30px rgba(0,255,136,0.8); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes float {
+            from { transform: translateY(100vh) rotate(0deg); }
+            to { transform: translateY(-100px) rotate(360deg); }
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translate(-50%, -60%); opacity: 0; }
+            to { transform: translate(-50%, -50%); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .digital-clock {
+                font-size: 1.8rem;
+                padding: 15px 25px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .weekly-overview {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-particles" id="particles"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-calendar-alt"></i> جدول الأسبوع المتطور</h1>
+            <div class="digital-clock" id="digitalClock"></div>
+            <div class="date-display" id="dateDisplay"></div>
+            <div class="current-day-highlight" id="currentDayHighlight"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="downloadPDF()">
+                <i class="fas fa-download"></i> تحميل PDF
+            </button>
+            <button class="btn btn-secondary" onclick="showStats()">
+                <i class="fas fa-chart-bar"></i> الإحصائيات المفصلة
+            </button>
+            <button class="btn btn-success" onclick="resetProgress()">
+                <i class="fas fa-refresh"></i> إعادة تعيين
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="today-schedule">
+                <h2>
+                    <i class="fas fa-star"></i>
+                    <span id="todayTitle">مهام اليوم</span>
+                </h2>
+                <div id="todayScheduleContent"></div>
+            </div>
+
+            <div class="sidebar">
+                <div class="today-tasks">
+                    <h3><i class="fas fa-tasks"></i> قائمة المهام</h3>
+                    <div id="todayTasks"></div>
+                </div>
+
+                <div class="stats-container">
+                    <h3><i class="fas fa-chart-pie"></i> الإحصائيات</h3>
+                    
+                    <div class="stats-tabs">
+                        <div class="stats-tab active" onclick="switchStatsTab('daily')">يومي</div>
+                        <div class="stats-tab" onclick="switchStatsTab('weekly')">أسبوعي</div>
+                        <div class="stats-tab" onclick="switchStatsTab('monthly')">شهري</div>
+                    </div>
+
+                    <div id="dailyStats" class="stats-content active">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="dailyCompleted">0</div>
+                                <div>مهام اليوم</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="dailyTotal">0</div>
+                                <div>إجمالي المهام</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="dailyProgress"></div>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; color: #666;">
+                            <span id="dailyPercentage">0%</span> مكتمل
+                        </div>
+                    </div>
+
+                    <div id="weeklyStats" class="stats-content">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="weeklyCompleted">0</div>
+                                <div>مهام الأسبوع</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="weeklyTotal">0</div>
+                                <div>إجمالي المهام</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="weeklyProgress"></div>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; color: #666;">
+                            <span id="weeklyPercentage">0%</span> مكتمل
+                        </div>
+                        <div class="weekly-overview" id="weeklyOverview"></div>
+                    </div>
+
+                    <div id="monthlyStats" class="stats-content">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="monthlyCompleted">0</div>
+                                <div>مهام الشهر</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="monthlyTotal">0</div>
+                                <div>إجمالي المهام</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="monthlyProgress"></div>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; color: #666;">
+                            <span id="monthlyPercentage">0%</span> مكتمل
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal للإحصائيات المفصلة -->
+    <div class="modal" id="statsModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2><i class="fas fa-chart-line"></i> تقرير مفصل</h2>
+            <div id="detailedStats"></div>
+        </div>
+    </div>
+
+    <script>
+        // بيانات الجدول
+        const scheduleData = [
+            {
+                day: "السبت",
+                dayEn: "saturday",
+                study: ["عربي", "أحياء"],
+                gym: ["بنش", "تراي"]
+            },
+            {
+                day: "الأحد", 
+                dayEn: "sunday",
+                study: ["فيزياء", "انجليزي"],
+                gym: ["ضهر", "باي"]
+            },
+            {
+                day: "الاثنين",
+                dayEn: "monday",
+                study: ["كيمياء"],
+                gym: ["رجل", "كتف"]
+            },
+            {
+                day: "الثلاثاء",
+                dayEn: "tuesday",
+                study: ["عربي", "أحياء"], 
+                gym: ["بنش", "تراي"]
+            },
+            {
+                day: "الأربعاء",
+                dayEn: "wednesday",
+                study: ["فيزياء", "انجليزي"],
+                gym: ["ضهر", "باي"]
+            },
+            {
+                day: "الخميس",
+                dayEn: "thursday",
+                study: ["كيمياء"],
+                gym: ["رجل", "كتف"]
+            },
+            {
+                day: "الجمعة",
+                dayEn: "friday",
+                study: ["امتحانات"],
+                gym: ["بطن", "كارديو"]
+            }
+        ];
+
+        // متغيرات عامة
+        let taskProgress = JSON.parse(localStorage.getItem('taskProgress')) || {};
+        let currentDayIndex = new Date().getDay();
+        // تحويل من نظام JavaScript إلى نظام المصفوفة
+        // JS: الأحد=0, الاثنين=1, الثلاثاء=2, الأربعاء=3, الخميس=4, الجمعة=5, السبت=6
+        // Array: السبت=0, الأحد=1, الاثنين=2, الثلاثاء=3, الأربعاء=4, الخميس=5, الجمعة=6
+        if (currentDayIndex === 0) {
+            currentDayIndex = 1; // الأحد
+        } else if (currentDayIndex === 6) {
+            currentDayIndex = 0; // السبت
+        } else {
+            currentDayIndex = currentDayIndex + 1; // باقي الأيام
+        }
+
+        // تحديث الساعة الرقمية
+        function updateDigitalClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ar-EG', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            document.getElementById('digitalClock').textContent = timeString;
+        }
+
+        // تحديث التاريخ
+        function updateDate() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString('ar-EG', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('dateDisplay').textContent = dateString;
+            
+            const currentDay = scheduleData[currentDayIndex];
+            document.getElementById('currentDayHighlight').textContent = 
+                `اليوم: ${currentDay.day}`;
+            document.getElementById('todayTitle').textContent = 
+                `مهام ${currentDay.day}`;
+        }
+
+        // إنشاء جدول اليوم الحالي
+        function createTodaySchedule() {
+            const container = document.getElementById('todayScheduleContent');
+            const today = scheduleData[currentDayIndex];
+            
+            if (!today) return;
+
+            container.innerHTML = `
+                <div class="task-section">
+                    <h4><i class="fas fa-book"></i> الدراسة</h4>
+                    ${today.study.map(subject => 
+                        `<span class="subject-tag">${subject}</span>`
+                    ).join('')}
+                </div>
+                <div class="task-section">
+                    <h4><i class="fas fa-dumbbell"></i> الجيم</h4>
+                    ${today.gym.map(exercise => 
+                        `<span class="subject-tag gym-tag">${exercise}</span>`
+                    ).join('')}
+                </div>
+            `;
+        }
+
+        // إنشاء مهام اليوم
+        function createTodayTasks() {
+            const container = document.getElementById('todayTasks');
+            const today = scheduleData[currentDayIndex];
+            
+            if (!today) return;
+
+            const allTasks = [...today.study, ...today.gym];
+            container.innerHTML = '';
+
+            // قسم الدراسة
+            if (today.study.length > 0) {
+                const studySection = document.createElement('div');
+                studySection.className = 'task-section';
+                studySection.innerHTML = '<h4><i class="fas fa-book"></i> الدراسة</h4>';
+                
+                today.study.forEach((task, index) => {
+                    const taskId = `${today.dayEn}_study_${index}`;
+                    const isCompleted = taskProgress[taskId] || false;
+                    
+                    const taskElement = document.createElement('div');
+                    taskElement.className = `task-item ${isCompleted ? 'completed' : ''}`;
+                    taskElement.innerHTML = `
+                        <input type="checkbox" class="task-checkbox" 
+                               ${isCompleted ? 'checked' : ''} 
+                               onchange="toggleTask('${taskId}', this)">
+                        <span>${task}</span>
+                        <i class="fas fa-book"></i>
+                    `;
+                    
+                    studySection.appendChild(taskElement);
+                });
+                
+                container.appendChild(studySection);
+            }
+
+            // قسم الجيم
+            if (today.gym.length > 0) {
+                const gymSection = document.createElement('div');
+                gymSection.className = 'task-section';
+                gymSection.innerHTML = '<h4><i class="fas fa-dumbbell"></i> الجيم</h4>';
+                
+                today.gym.forEach((task, index) => {
+                    const taskId = `${today.dayEn}_gym_${index}`;
+                    const isCompleted = taskProgress[taskId] || false;
+                    
+                    const taskElement = document.createElement('div');
+                    taskElement.className = `task-item ${isCompleted ? 'completed' : ''}`;
+                    taskElement.innerHTML = `
+                        <input type="checkbox" class="task-checkbox" 
+                               ${isCompleted ? 'checked' : ''} 
+                               onchange="toggleTask('${taskId}', this)">
+                        <span>${task}</span>
+                        <i class="fas fa-dumbbell"></i>
+                    `;
+                    
+                    gymSection.appendChild(taskElement);
+                });
+                
+                container.appendChild(gymSection);
+            }
+        }
+
+        // تبديل حالة المهمة
+        function toggleTask(taskId, checkbox) {
+            taskProgress[taskId] = checkbox.checked;
+            localStorage.setItem('taskProgress', JSON.stringify(taskProgress));
+            
+            const taskItem = checkbox.parentElement;
+            if (checkbox.checked) {
+                taskItem.classList.add('completed');
+                taskItem.style.animation = 'bounceIn 0.5s ease-out';
+            } else {
+                taskItem.classList.remove('completed');
+            }
+            
+            updateAllStats();
+        }
+
+        // تبديل تبويب الإحصائيات
+        function switchStatsTab(tab) {
+            // إزالة الفئة النشطة من جميع التبويبات
+            document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.stats-content').forEach(c => c.classList.remove('active'));
+            
+            // إضافة الفئة النشطة للتبويب المحدد
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Stats').classList.add('active');
+        }
+
+        // حساب الإحصائيات اليومية
+        function calculateDailyStats() {
+            const today = scheduleData[currentDayIndex];
+            if (!today) return { completed: 0, total: 0, percentage: 0 };
+
+            const allTasks = [...today.study, ...today.gym];
+            const completedCount = allTasks.filter((task, index) => {
+                const studyTaskId = `${today.dayEn}_study_${index}`;
+                const gymTaskId = `${today.dayEn}_gym_${index}`;
+                return taskProgress[studyTaskId] || taskProgress[gymTaskId];
+            }).length;
+
+            // إعادة حساب صحيحة
+            let actualCompleted = 0;
+            today.study.forEach((task, index) => {
+                const taskId = `${today.dayEn}_study_${index}`;
+                if (taskProgress[taskId]) actualCompleted++;
+            });
+            today.gym.forEach((task, index) => {
+                const taskId = `${today.dayEn}_gym_${index}`;
+                if (taskProgress[taskId]) actualCompleted++;
+            });
+
+            const totalCount = allTasks.length;
+            const percentage = totalCount > 0 ? Math.round((actualCompleted / totalCount) * 100) : 0;
+
+            return { completed: actualCompleted, total: totalCount, percentage };
+        }
+
+        // حساب الإحصائيات الأسبوعية
+        function calculateWeeklyStats() {
+            let totalCompleted = 0;
+            let totalTasks = 0;
+
+            scheduleData.forEach(day => {
+                const allTasks = [...day.study, ...day.gym];
+                totalTasks += allTasks.length;
+
+                day.study.forEach((task, index) => {
+                    const taskId = `${day.dayEn}_study_${index}`;
+                    if (taskProgress[taskId]) totalCompleted++;
+                });
+                day.gym.forEach((task, index) => {
+                    const taskId = `${day.dayEn}_gym_${index}`;
+                    if (taskProgress[taskId]) totalCompleted++;
+                });
+            });
+
+            const percentage = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
+            return { completed: totalCompleted, total: totalTasks, percentage };
+        }
+
+        // حساب الإحصائيات الشهرية (تقدير لـ 4 أسابيع)
+        function calculateMonthlyStats() {
+            const weeklyStats = calculateWeeklyStats();
+            return {
+                completed: weeklyStats.completed * 4,
+                total: weeklyStats.total * 4,
+                percentage: weeklyStats.percentage
+            };
+        }
+
+        // إنشاء نظرة عامة أسبوعية
+        function createWeeklyOverview() {
+            const container = document.getElementById('weeklyOverview');
+            container.innerHTML = '';
+
+            scheduleData.forEach((day, index) => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'day-overview';
+                
+                const allTasks = [...day.study, ...day.gym];
+                let completedCount = 0;
+                
+                day.study.forEach((task, taskIndex) => {
+                    const taskId = `${day.dayEn}_study_${taskIndex}`;
+                    if (taskProgress[taskId]) completedCount++;
+                });
+                day.gym.forEach((task, taskIndex) => {
+                    const taskId = `${day.dayEn}_gym_${taskIndex}`;
+                    if (taskProgress[taskId]) completedCount++;
+                });
+
+                if (index === currentDayIndex) {
+                    dayElement.classList.add('current');
+                } else if (completedCount === allTasks.length && allTasks.length > 0) {
+                    dayElement.classList.add('completed');
+                }
+
+                dayElement.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 5px;">${day.day}</div>
+                    <div style="font-size: 0.8rem;">${completedCount}/${allTasks.length}</div>
+                `;
+                
+                container.appendChild(dayElement);
+            });
+        }
+
+        // تحديث جميع الإحصائيات
+        function updateAllStats() {
+            // الإحصائيات اليومية
+            const dailyStats = calculateDailyStats();
+            document.getElementById('dailyCompleted').textContent = dailyStats.completed;
+            document.getElementById('dailyTotal').textContent = dailyStats.total;
+            document.getElementById('dailyProgress').style.width = dailyStats.percentage + '%';
+            document.getElementById('dailyPercentage').textContent = dailyStats.percentage;
+
+            // الإحصائيات الأسبوعية
+            const weeklyStats = calculateWeeklyStats();
+            document.getElementById('weeklyCompleted').textContent = weeklyStats.completed;
+            document.getElementById('weeklyTotal').textContent = weeklyStats.total;
+            document.getElementById('weeklyProgress').style.width = weeklyStats.percentage + '%';
+            document.getElementById('weeklyPercentage').textContent = weeklyStats.percentage;
+
+            // الإحصائيات الشهرية
+            const monthlyStats = calculateMonthlyStats();
+            document.getElementById('monthlyCompleted').textContent = monthlyStats.completed;
+            document.getElementById('monthlyTotal').textContent = monthlyStats.total;
+            document.getElementById('monthlyProgress').style.width = monthlyStats.percentage + '%';
+            document.getElementById('monthlyPercentage').textContent = monthlyStats.percentage;
+
+            // تحديث النظرة العامة الأسبوعية
+            createWeeklyOverview();
+        }
+
+        // تحميل PDF
+        async function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            
+            pdf.setFont('helvetica');
+            pdf.setFontSize(20);
+            
+            const today = scheduleData[currentDayIndex];
+            pdf.text(`Today's Schedule - ${today.day}`, 105, 20, { align: 'center' });
+            
+            let yPosition = 40;
+            pdf.setFontSize(14);
+            
+            // مهام الدراسة
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Study Tasks:', 20, yPosition);
+            yPosition += 10;
+            
+            pdf.setFont('helvetica', 'normal');
+            today.study.forEach(task => {
+                pdf.text(`- ${task}`, 25, yPosition);
+                yPosition += 8;
+            });
+            
+            yPosition += 10;
+            
+            // مهام الجيم
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Gym Tasks:', 20, yPosition);
+            yPosition += 10;
+            
+            pdf.setFont('helvetica', 'normal');
+            today.gym.forEach(task => {
+                pdf.text(`- ${task}`, 25, yPosition);
+                yPosition += 8;
+            });
+            
+            // إضافة الإحصائيات
+            yPosition += 20;
+            const dailyStats = calculateDailyStats();
+            const weeklyStats = calculateWeeklyStats();
+            
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Statistics:', 20, yPosition);
+            yPosition += 10;
+            
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(`Daily Progress: ${dailyStats.completed}/${dailyStats.total} (${dailyStats.percentage}%)`, 25, yPosition);
+            yPosition += 8;
+            pdf.text(`Weekly Progress: ${weeklyStats.completed}/${weeklyStats.total} (${weeklyStats.percentage}%)`, 25, yPosition);
+            
+            pdf.save(`schedule-${today.dayEn}.pdf`);
+        }
+
+        // عرض الإحصائيات المفصلة
+        function showStats() {
+            const modal = document.getElementById('statsModal');
+            const detailedStats = document.getElementById('detailedStats');
+            
+            let statsHTML = '<div style="margin: 20px 0;">';
+            
+            scheduleData.forEach((day, dayIndex) => {
+                const allTasks = [...day.study, ...day.gym];
+                let completedCount = 0;
+                
+                day.study.forEach((task, taskIndex) => {
+                    const taskId = `${day.dayEn}_study_${taskIndex}`;
+                    if (taskProgress[taskId]) completedCount++;
+                });
+                day.gym.forEach((task, taskIndex) => {
+                    const taskId = `${day.dayEn}_gym_${taskIndex}`;
+                    if (taskProgress[taskId]) completedCount++;
+                });
+                
+                const percentage = allTasks.length > 0 ? Math.round((completedCount / allTasks.length) * 100) : 0;
+                const isCurrentDay = dayIndex === currentDayIndex;
+                
+                statsHTML += `
+                    <div style="margin-bottom: 15px; padding: 15px; background: ${isCurrentDay ? '#e3f2fd' : '#f8f9fa'}; border-radius: 10px; ${isCurrentDay ? 'border: 2px solid #2196f3;' : ''}">
+                        <h4>${day.day} ${isCurrentDay ? '(اليوم الحالي)' : ''}</h4>
+                        <p>المهام المكتملة: ${completedCount}/${allTasks.length}</p>
+                        <div style="background: #e9ecef; height: 10px; border-radius: 5px; overflow: hidden;">
+                            <div style="background: linear-gradient(45deg, #00d2d3, #54a0ff); height: 100%; width: ${percentage}%; transition: width 0.5s ease;"></div>
+                        </div>
+                        <small>${percentage}% مكتمل</small>
+                    </div>
+                `;
+            });
+            
+            const weeklyStats = calculateWeeklyStats();
+            const monthlyStats = calculateMonthlyStats();
+            
+            statsHTML += `
+                <div style="margin-top: 20px; padding: 20px; background: #e8f5e8; border-radius: 10px;">
+                    <h3>ملخص الإحصائيات</h3>
+                    <p><strong>الأسبوع الحالي:</strong> ${weeklyStats.completed}/${weeklyStats.total} (${weeklyStats.percentage}%)</p>
+                    <p><strong>تقدير الشهر:</strong> ${monthlyStats.completed}/${monthlyStats.total} (${monthlyStats.percentage}%)</p>
+                </div>
+            `;
+            
+            statsHTML += '</div>';
+            detailedStats.innerHTML = statsHTML;
+            modal.style.display = 'block';
+        }
+
+        // إغلاق النافذة المنبثقة
+        function closeModal() {
+            document.getElementById('statsModal').style.display = 'none';
+        }
+
+        // إعادة تعيين التقدم
+        function resetProgress() {
+            if (confirm('هل أنت متأكد من إعادة تعيين جميع المهام؟')) {
+                taskProgress = {};
+                localStorage.removeItem('taskProgress');
+                createTodayTasks();
+                updateAllStats();
+            }
+        }
+
+        // إنشاء الجسيمات المتحركة
+        function createParticles() {
+            const container = document.getElementById('particles');
+            
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = particle.style.height = Math.random() * 10 + 5 + 'px';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // تهيئة الصفحة
+        function init() {
+            updateDigitalClock();
+            updateDate();
+            setInterval(updateDigitalClock, 1000);
+            createTodaySchedule();
+            createTodayTasks();
+            updateAllStats();
+            createParticles();
+        }
+
+        // إغلاق النافذة المنبثقة عند النقر خارجها
+        window.onclick = function(event) {
+            const modal = document.getElementById('statsModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // تشغيل التطبيق
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
